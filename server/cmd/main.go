@@ -85,7 +85,7 @@ func main() {
 	tryErrorOut(err)
 	defer db.CloseConnection()
 
-	agg, err := aggregation.NewAggregator()
+	agg, err := aggregation.NewAggregator(&db)
 	tryErrorOut(err)
 
 	serverHandler := api.NewServerHandler(
