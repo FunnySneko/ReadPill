@@ -1,0 +1,19 @@
+{
+    "rating_rules": [
+        {
+            "name": "overall_rating",
+            "value_ceiling": 10,
+            "contribute": true
+        },
+        {
+            "name": "style_rating",
+            "value_ceiling": 5,
+            "contribute": false
+        },
+        {
+            "name": "readability_rating",
+            "value_ceiling": 5,
+            "contribute": false
+        }
+    ]
+}

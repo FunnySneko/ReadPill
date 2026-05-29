@@ -1,0 +1,247 @@
+openapi: 3.0.4
+
+info:
+  title: ReadPill
+  version: "0.1.0"
+
+servers:
+  - url: http://localhost:8080
+    description: The local backend
+
+paths:
+  /signup:
+    post:
+      summary: Signs user up if the email isn't taken
+      requestBody:
+        description: Signup credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SignupCredentials"
+
+      responses:
+        "200":
+          description: Signup successfull
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: JWT auth cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /login:
+    post:
+      summary: Logs user in if the password is correct
+      requestBody:
+        description: Login credentials
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginCredentials"
+      responses:
+        "200":
+          description: Login successfull
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+              description: JWT auth cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /books:
+    get:
+      summary: Returns a list of all books
+      responses:
+        "200":
+          description: An array of Book objects
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BookArray"
+    post:
+      summary: Creates new book
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                data:
+                  $ref: "#/components/schemas/BookPost"
+                image:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Book created
+  /books/{id}/reviews:
+    post:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      summary: Creates new review
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewPost"
+  /review-rules:
+    get:
+      summary: Returns rules for a review
+      responses:
+        "200":
+          description: Review rules object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReviewRules"
+
+components:
+  schemas:
+    SignupCredentials:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - email
+        - password
+    LoginCredentials:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+    BookArray:
+      type: array
+      items:
+        $ref: "#/components/schemas/Book"
+    Book:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author_id:
+          type: integer
+        author_name:
+          type: string
+        description:
+          type: string
+        year_of_release:
+          type: integer
+        tags:
+          $ref: "#/components/schemas/TagArray"
+        cover_image:
+          type: string
+      required:
+        - id
+        - title
+        - author_id
+        - author_name
+        - description
+        - year_of_release
+        - tags
+        - cover_image
+    BookPost:
+      type: object
+      properties:
+        title:
+          type: string
+        author_name:
+          type: string
+        description:
+          type: string
+        year_of_release:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+      required:
+        - title
+        - author_name
+        - description
+        - tags
+        - year_of_release
+    TagArray:
+      type: array
+      items:
+        $ref: "#/components/schemas/Tag"
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+        - id
+        - name
+    ReviewPost:
+      type: object
+      properties:
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rating"
+      required:
+        - ratings
+    Rating:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+          format: float
+      required:
+        - name
+        - value
+    ReviewRules:
+      type: object
+      properties:
+        rating_rules:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingRule"
+      required:
+        - rating_rules
+    RatingRule:
+      type: object
+      properties:
+        name:
+          type: string
+        value_ceiling:
+          type: number
+          format: float
+      required:
+        - name
+        - value_ceiling
