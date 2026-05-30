@@ -1,14 +1,15 @@
 package book
 
 type Book struct {
-	Id            int
-	Title         string
-	AuthorId      int
-	AuthorName    string
-	Description   string
-	YearOfRelease int
-	Tags          []BookTag
-	CoverImageURL string
+	Id             int
+	Title          string
+	AuthorId       int
+	AuthorName     string
+	Description    string
+	YearOfRelease  int
+	Tags           []BookTag
+	CoverImageURL  string
+	ShowcaseRating float32
 }
 
 type BookFilter struct {

@@ -1,4 +1,5 @@
 {
+    "showcase_rating_scale": 10,
     "rating_rules": [
         {
             "name": "overall_rating",

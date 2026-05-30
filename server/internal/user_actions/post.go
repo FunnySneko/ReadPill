@@ -1,6 +1,7 @@
 package user_actions
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 
@@ -8,23 +9,23 @@ import (
 	"github.com/FunnySneko/ReadPill/server/internal/review"
 )
 
-func (ah *ActionsHandler) PostBookTag(bookId int, tag string) error {
-	tagId, err := ah.db.FindTag(tag)
+func (ah *ActionsHandler) PostBookTag(ctx context.Context, bookId int, tag string) error {
+	tagId, err := ah.db.FindTag(ctx, tag)
 	if err != nil {
 		if errors.Is(err, db.ErrTagNotFound) {
-			tagId, err = ah.db.CreateTag(tag)
+			tagId, err = ah.db.CreateTag(ctx, tag)
 		} else {
 			return err
 		}
 	}
-	return ah.db.CreateBookTag(bookId, tagId)
+	return ah.db.CreateBookTag(ctx, bookId, tagId)
 }
 
-func (ah *ActionsHandler) PostBook(title string, authorName string, description string, yearOfRelease int, tags []string, coverImageURL string) error {
-	authorId, err := ah.db.FindWriter(authorName)
+func (ah *ActionsHandler) PostBook(ctx context.Context, title string, authorName string, description string, yearOfRelease int, tags []string, coverImageURL string, userId int) error {
+	authorId, err := ah.db.FindWriter(ctx, authorName)
 	if err != nil {
 		if errors.Is(err, db.ErrWriterNotFound) {
-			authorId, err = ah.db.CreateWriter(authorName)
+			authorId, err = ah.db.CreateWriter(ctx, authorName)
 			if err != nil {
 				return err
 			}
@@ -33,9 +34,9 @@ func (ah *ActionsHandler) PostBook(title string, authorName string, description 
 		}
 	}
 
-	bookId, err := ah.db.CreateBook(title, authorId, description, yearOfRelease, coverImageURL)
+	bookId, err := ah.db.CreateBook(ctx, title, authorId, description, yearOfRelease, coverImageURL, userId)
 	for _, tag := range tags {
-		err = ah.PostBookTag(bookId, tag)
+		err = ah.PostBookTag(ctx, bookId, tag)
 		if err != nil {
 			slog.Error(err.Error())
 		}
@@ -43,18 +44,18 @@ func (ah *ActionsHandler) PostBook(title string, authorName string, description 
 	return nil
 }
 
-func (ah *ActionsHandler) PostRating(reviewId int, rating review.Rating) error {
-	err := ah.db.CreateRating(reviewId, rating.Name, rating.Value)
+func (ah *ActionsHandler) PostRating(ctx context.Context, reviewId int, rating review.Rating) error {
+	err := ah.db.CreateRating(ctx, reviewId, rating.Name, rating.Value, rating.ValueCeiling, rating.Contribute)
 	return err
 }
 
-func (ah *ActionsHandler) PostReview(userId int, bookId int, ratings []review.Rating) error {
-	reviewId, err := ah.db.CreateReview(bookId, userId)
+func (ah *ActionsHandler) PostReview(ctx context.Context, userId int, bookId int, ratings []review.Rating) error {
+	reviewId, err := ah.db.CreateReview(ctx, bookId, userId)
 	if err != nil {
 		return err
 	}
 	for _, rating := range ratings {
-		err = ah.PostRating(reviewId, rating)
+		err = ah.PostRating(ctx, reviewId, rating)
 		if err != nil {
 			slog.Error(err.Error())
 		}

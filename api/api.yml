@@ -84,10 +84,30 @@ paths:
                 image:
                   type: string
                   format: binary
+              required:
+                - data
+                - image
       responses:
         "200":
           description: Book created
   /books/{id}/reviews:
+    get:
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+      summary: Returns a list of reviews
+      responses:
+        "200":
+          description: An array of Review objects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
     post:
       parameters:
         - in: path
@@ -205,6 +225,21 @@ components:
       required:
         - id
         - name
+    Review:
+      type: object
+      properties:
+        user_id:
+          type: integer
+        username:
+          type: string
+        ratings:
+          type: array
+          items:
+            $ref: "#/components/schemas/Rating"
+      required:
+        - user_id
+        - username
+        - ratings
     ReviewPost:
       type: object
       properties:

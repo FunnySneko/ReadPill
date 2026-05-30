@@ -37,7 +37,7 @@ func AuthMiddleware(next http.Handler) http.Handler {
 
 		cookie, err := r.Cookie("token")
 		if err != nil {
-			api.ErrorOut(w, err, "unauthorized", http.StatusUnauthorized)
+			api.ErrorOut(w, api.ErrUnauthorized)
 			return
 		}
 
@@ -60,13 +60,13 @@ func AuthMiddleware(next http.Handler) http.Handler {
 		)
 
 		if err != nil || token == nil || !token.Valid {
-			api.ErrorOut(w, err, "invalid token", http.StatusUnauthorized)
+			api.ErrorOut(w, api.ErrUnauthorized)
 			return
 		}
 
 		userID, ok := claims["user_id"]
 		if !ok {
-			api.ErrorOut(w, nil, "missing user id", http.StatusUnauthorized)
+			api.ErrorOut(w, api.ErrUnauthorized)
 			return
 		}
 

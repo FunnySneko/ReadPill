@@ -1,7 +1,8 @@
 CREATE TABLE
-    "review" (
+    "user" (
         "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-        "book_id" INT NOT NULL REFERENCES "book" ("id"),
-        "user_id" INT NOT NULL REFERENCES "user" ("id"),
+        "username" TEXT NOT NULL,
+        "email" TEXT UNIQUE NOT NULL,
+        "password_hash" TEXT NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT NOW ()
     );

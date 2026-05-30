@@ -6,14 +6,14 @@ import (
 	"github.com/FunnySneko/ReadPill/server/internal/review"
 )
 
-func (d *Db) CreateReview(bookId int, userId int) (int, error) {
+func (d *Db) CreateReview(ctx context.Context, bookId int, userId int) (int, error) {
 	reviewId := 0
-	err := d.conn.QueryRow(context.Background(), `INSERT INTO "review" (book_id, user_id) VALUES ($1, $2) RETURNING id`, bookId, userId).Scan(&reviewId)
+	err := d.conn.QueryRow(ctx, `INSERT INTO "review" (book_id, user_id) VALUES ($1, $2) RETURNING id`, bookId, userId).Scan(&reviewId)
 	return reviewId, err
 }
 
-func (d *Db) GetBookReviewIDs(bookId int) ([]int, error) {
-	rows, err := d.conn.Query(context.Background(), `SELECT id from "review" WHERE book_id = $1`, bookId)
+func (d *Db) GetBookReviewIDs(ctx context.Context, bookId int) ([]int, error) {
+	rows, err := d.conn.Query(ctx, `SELECT id from "review" WHERE book_id = $1`, bookId)
 	if err != nil {
 		return nil, err
 	}
@@ -29,11 +29,8 @@ func (d *Db) GetBookReviewIDs(bookId int) ([]int, error) {
 	return reviewIDs, nil
 }
 
-func (d *Db) GetReview(reviewId int) (review.Review, error) {
+func (d *Db) GetReview(ctx context.Context, reviewId int) (review.Review, error) {
 	review := review.Review{}
-	err := d.conn.QueryRow(context.Background(), `SELECT book_id, user_id FROM "review" WHERE id = $1`, reviewId).Scan(&review.BookId, &review.UserId)
-	if err != nil {
-		return review, err
-	}
-	return review, nil
+	err := d.conn.QueryRow(ctx, `SELECT book_id, user_id FROM "review" WHERE id = $1`, reviewId).Scan(&review.BookId, &review.UserId)
+	return review, err
 }

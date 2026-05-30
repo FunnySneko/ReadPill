@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 	"os"
@@ -11,6 +12,8 @@ import (
 )
 
 //go:generate go tool oapi-codegen -generate std-http,types -package api -o api.gn.go ../../../api/api.yml
+
+var ErrUnauthorized = errors.New("unauthorized")
 
 func NewServerHandler(database *db.Db, aggregator *aggregation.Aggregator, authHander *user_actions.ActionsHandler) *ServerHandler {
 	serverHandler := ServerHandler{
@@ -29,7 +32,28 @@ type ServerHandler struct {
 	secret []byte
 }
 
-func ErrorOut(w http.ResponseWriter, err error, message string, statusCode int) {
+func ErrorOut(w http.ResponseWriter, err error) {
 	slog.Error(err.Error())
+
+	var message string
+	var statusCode int
+
+	if errors.Is(err, ErrUnauthorized) {
+		message = "unauthorized"
+		statusCode = http.StatusUnauthorized
+	} else if errors.Is(err, user_actions.ErrEmailTaken) {
+		message = "email already taken"
+		statusCode = http.StatusConflict
+	} else if errors.Is(err, user_actions.ErrWrongUser) || errors.Is(err, user_actions.ErrWrongPassword) {
+		message = "wrong email or password"
+		statusCode = http.StatusUnauthorized
+	} else if errors.Is(err, ErrInvalidRatings) {
+		message = "invalid ratings"
+		statusCode = http.StatusBadRequest
+	} else {
+		message = "internal server error"
+		statusCode = http.StatusInternalServerError
+	}
+
 	http.Error(w, message, statusCode)
 }

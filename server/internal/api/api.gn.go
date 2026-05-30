@@ -55,6 +55,13 @@ type RatingRule struct {
 	ValueCeiling float32 `json:"value_ceiling"`
 }
 
+// Review defines model for Review.
+type Review struct {
+	Ratings  []Rating `json:"ratings"`
+	UserId   int      `json:"user_id"`
+	Username string   `json:"username"`
+}
+
 // ReviewPost defines model for ReviewPost.
 type ReviewPost struct {
 	Ratings []Rating `json:"ratings"`
@@ -83,8 +90,8 @@ type TagArray = []Tag
 
 // PostBooksMultipartBody defines parameters for PostBooks.
 type PostBooksMultipartBody struct {
-	Data  *BookPost           `json:"data,omitempty"`
-	Image *openapi_types.File `json:"image,omitempty"`
+	Data  BookPost           `json:"data"`
+	Image openapi_types.File `json:"image"`
 }
 
 // PostBooksMultipartRequestBody defines body for PostBooks for multipart/form-data ContentType.
@@ -107,6 +114,9 @@ type ServerInterface interface {
 	// Creates new book
 	// (POST /books)
 	PostBooks(w http.ResponseWriter, r *http.Request)
+	// Returns a list of reviews
+	// (GET /books/{id}/reviews)
+	GetBooksIdReviews(w http.ResponseWriter, r *http.Request, id int)
 	// Creates new review
 	// (POST /books/{id}/reviews)
 	PostBooksIdReviews(w http.ResponseWriter, r *http.Request, id int)
@@ -149,6 +159,32 @@ func (siw *ServerInterfaceWrapper) PostBooks(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostBooks(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetBooksIdReviews operation middleware
+func (siw *ServerInterfaceWrapper) GetBooksIdReviews(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id int
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: ""})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetBooksIdReviews(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -348,6 +384,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/books", wrapper.GetBooks)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/books", wrapper.PostBooks)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/books/{id}/reviews", wrapper.GetBooksIdReviews)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/books/{id}/reviews", wrapper.PostBooksIdReviews)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/login", wrapper.PostLogin)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/review-rules", wrapper.GetReviewRules)

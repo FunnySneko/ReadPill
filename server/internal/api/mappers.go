@@ -49,3 +49,18 @@ func mapRatingFromAPI(rating Rating) review.Rating {
 		Value: rating.Value,
 	}
 }
+
+func mapRatingToAPI(rating review.Rating) Rating {
+	return Rating{
+		Name:  rating.Name,
+		Value: rating.Value,
+	}
+}
+
+func mapReviewToAPI(review review.Review) Review {
+	r := Review{}
+	for _, rating := range review.Ratings {
+		r.Ratings = append(r.Ratings, mapRatingToAPI(rating))
+	}
+	return r
+}

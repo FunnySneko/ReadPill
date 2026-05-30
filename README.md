@@ -52,6 +52,7 @@ cd ReadPill
 
 ```bash
 cd server
+cp .env.example .env
 make setup
 go run cmd/main.go
 ```

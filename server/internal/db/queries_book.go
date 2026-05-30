@@ -109,7 +109,7 @@ func (qb *queryBuilder) applyFilter(filter *book.BookFilter, isNegative bool) {
 	qb.query += ")"
 }
 
-func (d *Db) GetBooks(filters []book.BookFilter, negativeFilters []book.BookFilter) ([]book.Book, error) {
+func (d *Db) GetBooks(ctx context.Context, filters []book.BookFilter, negativeFilters []book.BookFilter) ([]book.Book, error) {
 	qb := queryBuilder{
 		index: 1,
 		query: `SELECT
@@ -152,7 +152,7 @@ func (d *Db) GetBooks(filters []book.BookFilter, negativeFilters []book.BookFilt
 
 	qb.query += " GROUP BY b.id, w.id"
 
-	rows, err := d.conn.Query(context.Background(), qb.query, qb.args...)
+	rows, err := d.conn.Query(ctx, qb.query, qb.args...)
 	if err != nil {
 		return nil, err
 	}
@@ -179,8 +179,8 @@ func (d *Db) GetBooks(filters []book.BookFilter, negativeFilters []book.BookFilt
 	return books, nil
 }
 
-func (d *Db) CreateBook(title string, authorId int, description string, yearOfRelease int, coverImageURL string) (int, error) {
+func (d *Db) CreateBook(ctx context.Context, title string, authorId int, description string, yearOfRelease int, coverImageURL string, userId int) (int, error) {
 	bookId := 0
-	err := d.conn.QueryRow(context.Background(), "INSERT INTO book (title, author_id, description, year_of_release, cover_image) VALUES ($1, $2, $3, $4, $5) RETURNING id", title, authorId, description, yearOfRelease, coverImageURL).Scan(&bookId)
+	err := d.conn.QueryRow(ctx, "INSERT INTO book (title, author_id, description, year_of_release, cover_image, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id", title, authorId, description, yearOfRelease, coverImageURL, userId).Scan(&bookId)
 	return bookId, err
 }

@@ -3,7 +3,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"io"
 	"net/http"
 	"time"
 
@@ -38,39 +37,30 @@ func WriteJSON(w http.ResponseWriter, status int, payload any) error {
 	w.WriteHeader(status)
 
 	err := json.NewEncoder(w).Encode(payload)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (s *ServerHandler) PostSignup(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
 	sc := SignupCredentials{}
-	err = json.Unmarshal(body, &sc)
+	err := json.NewDecoder(r.Body).Decode(&sc)
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 		return
 	}
 
-	userId, err := s.Ah.SignUp(sc.Username, sc.Email, sc.Password)
+	userId, err := s.Ah.SignUp(r.Context(), sc.Username, sc.Email, sc.Password)
 	if err != nil {
 		if errors.Is(err, user_actions.ErrEmailTaken) {
-			ErrorOut(w, err, "email already taken", http.StatusConflict)
+			ErrorOut(w, err)
 		} else {
-			ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+			ErrorOut(w, err)
 		}
 		return
 	}
 
 	err = s.SetJWTToken(w, userId)
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 		return
 	}
 
@@ -78,37 +68,31 @@ func (s *ServerHandler) PostSignup(w http.ResponseWriter, r *http.Request) {
 		"message": "signup successful",
 	})
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 	}
 }
 
 func (s *ServerHandler) PostLogin(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
-		return
-	}
-
 	lc := LoginCredentials{}
-	err = json.Unmarshal(body, &lc)
+	err := json.NewDecoder(r.Body).Decode(&lc)
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 		return
 	}
 
-	userId, err := s.Ah.LogIn(lc.Email, lc.Password)
+	userId, err := s.Ah.LogIn(r.Context(), lc.Email, lc.Password)
 	if err != nil {
 		if errors.Is(err, user_actions.ErrWrongUser) || errors.Is(err, user_actions.ErrWrongPassword) {
-			ErrorOut(w, err, "wrong email or password", http.StatusUnauthorized)
+			ErrorOut(w, err)
 		} else {
-			ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+			ErrorOut(w, err)
 		}
 		return
 	}
 
 	err = s.SetJWTToken(w, userId)
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 		return
 	}
 
@@ -116,6 +100,6 @@ func (s *ServerHandler) PostLogin(w http.ResponseWriter, r *http.Request) {
 		"message": "login successful",
 	})
 	if err != nil {
-		ErrorOut(w, err, "internal server error", http.StatusInternalServerError)
+		ErrorOut(w, err)
 	}
 }
