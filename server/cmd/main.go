@@ -70,6 +70,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 			return
 		}
 
+		// i think right now the server can allow the user when they got cookie even if user's id is not present in the database
+
 		ctx := context.WithValue(r.Context(), "userID", userID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))

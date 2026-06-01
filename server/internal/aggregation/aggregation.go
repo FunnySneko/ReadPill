@@ -1,12 +1,10 @@
 package aggregation
 
 import (
-	"context"
 	"encoding/json"
-	"log/slog"
 	"os"
 
-	"github.com/FunnySneko/ReadPill/server/internal/book"
+	trash "github.com/FunnySneko/ReadPill/server/internal"
 	"github.com/FunnySneko/ReadPill/server/internal/db"
 	"github.com/FunnySneko/ReadPill/server/internal/review"
 )
@@ -17,7 +15,7 @@ func NewAggregator(database *db.Db) (*Aggregator, error) {
 	}
 
 	if err := agg.readReviewRules(); err != nil {
-		return nil, err
+		return nil, trash.WrapError("AGG INIT AGGREGATOR", err)
 	}
 
 	return agg, nil
@@ -31,58 +29,8 @@ type Aggregator struct {
 func (a *Aggregator) readReviewRules() error {
 	data, err := os.ReadFile("config/review_rules.json")
 	if err != nil {
-		return err
+		return trash.WrapError("AGG READ REVIEW RULES", err)
 	}
 	err = json.Unmarshal(data, &a.ReviewRules)
-	return err
-}
-
-func (a *Aggregator) formatRatingsByRules(ratings []review.Rating) error {
-	rat := []review.Rating{}
-	for _, rating := range ratings {
-
-	}
-	return nil
-}
-
-func (a *Aggregator) FormReview(ctx context.Context, reviewId int) (review.Review, error) {
-	review := review.Review{}
-	review, err := a.Db.GetReview(ctx, reviewId)
-	if err != nil {
-		return review, err
-	}
-
-	ratings, err := a.Db.GetReviewRatings(ctx, reviewId)
-	if err != nil {
-		return review, err
-	}
-
-	// need to convert uncompatible rating conventions here
-
-	review.Ratings = ratings
-
-	return review, nil
-}
-
-func (a *Aggregator) CollectBookReviews(ctx context.Context, bookId int) ([]review.Review, error) {
-	reviewIDs, err := a.Db.GetBookReviewIDs(ctx, bookId)
-	if err != nil {
-		return nil, err
-	}
-
-	reviews := []review.Review{}
-	for _, reviewId := range reviewIDs {
-		review, err := a.FormReview(ctx, reviewId)
-		if err != nil {
-			slog.Error(err.Error())
-			continue
-		}
-		reviews = append(reviews, review)
-	}
-
-	return reviews, err
-}
-
-func (a *Aggregator) CollectBooks(ctx context.Context, bookId []int) ([]book.Book, error) {
-
+	return trash.WrapError("AGG READ REVIEW RULES", err)
 }

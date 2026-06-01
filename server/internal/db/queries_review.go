@@ -2,35 +2,60 @@ package db
 
 import (
 	"context"
+	"fmt"
 
+	trash "github.com/FunnySneko/ReadPill/server/internal"
 	"github.com/FunnySneko/ReadPill/server/internal/review"
+	"github.com/jackc/pgx/v5"
 )
 
-func (d *Db) CreateReview(ctx context.Context, bookId int, userId int) (int, error) {
-	reviewId := 0
-	err := d.conn.QueryRow(ctx, `INSERT INTO "review" (book_id, user_id) VALUES ($1, $2) RETURNING id`, bookId, userId).Scan(&reviewId)
-	return reviewId, err
+func getReviewSelectQuery(column string, op string) string {
+	return fmt.Sprintf(`SELECT id, book_id, user_id, contribute_rating, user_opinion, user_bias FROM "review" WHERE %s %s $1`, column, op)
 }
 
-func (d *Db) GetBookReviewIDs(ctx context.Context, bookId int) ([]int, error) {
-	rows, err := d.conn.Query(ctx, `SELECT id from "review" WHERE book_id = $1`, bookId)
-	if err != nil {
-		return nil, err
-	}
-	reviewIDs := []int{}
+func readReviews(rows pgx.Rows) ([]review.Review, error) {
+	defer rows.Close()
+	reviews := []review.Review{}
 	for rows.Next() {
-		reviewId := 0
-		err = rows.Scan(&reviewId)
+		review := review.Review{}
+		err := rows.Scan(&review.Id, &review.BookId, &review.UserId, &review.ContributeRating, &review.UserOpinion, &review.UserBias)
 		if err != nil {
-			return nil, err
+			return nil, trash.WrapError("DB READ REVIEWS", err)
 		}
-		reviewIDs = append(reviewIDs, reviewId)
+		reviews = append(reviews, review)
 	}
-	return reviewIDs, nil
+	return reviews, nil
 }
 
-func (d *Db) GetReview(ctx context.Context, reviewId int) (review.Review, error) {
-	review := review.Review{}
-	err := d.conn.QueryRow(ctx, `SELECT book_id, user_id FROM "review" WHERE id = $1`, reviewId).Scan(&review.BookId, &review.UserId)
-	return review, err
+func (d *Db) CreateReview(ctx context.Context, bookId int, userId int, contributeRating float32, userOpinion float32, userBias float32) (int, error) {
+	reviewId := 0
+	err := d.conn.QueryRow(ctx, `INSERT INTO "review" (book_id, user_id, contribute_rating, user_opinion, user_bias) VALUES ($1, $2, $3, $4, $5) RETURNING id`, bookId, userId, contributeRating, userOpinion, userBias).Scan(&reviewId)
+	return reviewId, trash.WrapError("DB CREATE REVIEW", err)
+}
+
+func (d *Db) GetReviews(ctx context.Context, reviewIDs []int) ([]review.Review, error) {
+	rows, err := d.conn.Query(ctx, getReviewSelectQuery("id", "IN"), reviewIDs)
+	if err != nil {
+		return nil, trash.WrapError("DB GET REVIEWS", err)
+	}
+	defer rows.Close()
+	return readReviews(rows)
+}
+
+func (d *Db) GetBookReviews(ctx context.Context, bookId int) ([]review.Review, error) {
+	rows, err := d.conn.Query(ctx, getReviewSelectQuery("book_id", "="), bookId)
+	if err != nil {
+		return nil, trash.WrapError("DB GET BOOK REVIEWS", err)
+	}
+	defer rows.Close()
+	return readReviews(rows)
+}
+
+func (d *Db) GetUserReviews(ctx context.Context, userId int) ([]review.Review, error) {
+	rows, err := d.conn.Query(ctx, getReviewSelectQuery("user_id", "="), userId)
+	if err != nil {
+		return nil, trash.WrapError("DB GET USER REVIEWS", err)
+	}
+	defer rows.Close()
+	return readReviews(rows)
 }

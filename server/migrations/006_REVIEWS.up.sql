@@ -3,5 +3,8 @@ CREATE TABLE
         "id" INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
         "book_id" INT NOT NULL REFERENCES "book" ("id"),
         "user_id" INT NOT NULL REFERENCES "user" ("id"),
+        "contribute_rating" REAL NOT NULL,
+        "user_opinion" REAL NOT NULL,
+        "user_bias" REAL NOT NULL,
         "created_at" TIMESTAMP NOT NULL DEFAULT NOW ()
     );

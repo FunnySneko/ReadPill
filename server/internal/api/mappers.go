@@ -43,13 +43,6 @@ func mapReviewRulesToAPI(reviewRules review.ReviewRules) ReviewRules {
 	return r
 }
 
-func mapRatingFromAPI(rating Rating) review.Rating {
-	return review.Rating{
-		Name:  rating.Name,
-		Value: rating.Value,
-	}
-}
-
 func mapRatingToAPI(rating review.Rating) Rating {
 	return Rating{
 		Name:  rating.Name,
