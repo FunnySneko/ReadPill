@@ -1,11 +1,12 @@
 package review
 
 type Review struct {
-	Id          int
-	BookId      int
-	UserId      int
-	UserOpinion float32
-	Ratings     []Rating
+	Id             int
+	BookId         int
+	UserId         int
+	UserOpinion    float32
+	ShowcaseRating float32
+	Ratings        []Rating
 }
 
 type Rating struct {

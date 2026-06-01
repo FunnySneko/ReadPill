@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 
+	"github.com/FunnySneko/ReadPill/server/internal/book"
 	"github.com/FunnySneko/ReadPill/server/internal/db"
 	"github.com/FunnySneko/ReadPill/server/internal/review"
 )
@@ -34,6 +35,14 @@ func (a *Aggregator) readReviewRules() error {
 	}
 	err = json.Unmarshal(data, &a.ReviewRules)
 	return err
+}
+
+func (a *Aggregator) formatRatingsByRules(ratings []review.Rating) error {
+	rat := []review.Rating{}
+	for _, rating := range ratings {
+
+	}
+	return nil
 }
 
 func (a *Aggregator) FormReview(ctx context.Context, reviewId int) (review.Review, error) {
@@ -72,4 +81,8 @@ func (a *Aggregator) CollectBookReviews(ctx context.Context, bookId int) ([]revi
 	}
 
 	return reviews, err
+}
+
+func (a *Aggregator) CollectBooks(ctx context.Context, bookId []int) ([]book.Book, error) {
+
 }

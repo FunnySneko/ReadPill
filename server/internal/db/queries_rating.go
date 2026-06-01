@@ -16,6 +16,7 @@ func (d *Db) GetReviewRatings(ctx context.Context, reviewId int) ([]review.Ratin
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	ratings := []review.Rating{}
 	for rows.Next() {
 		rating := review.Rating{}
