@@ -17,8 +17,6 @@ package api
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log/slog"
 	"net/http"
 
 	trash "github.com/FunnySneko/ReadPill/server/internal"
@@ -73,23 +71,22 @@ func (s *ServerHandler) PostBooksIdReviews(w http.ResponseWriter, r *http.Reques
 
 	ratings := []review.Rating{}
 	for _, rating := range rev.Ratings {
-		slog.Info(fmt.Sprintf("%s %f", rating.Name, rating.Value))
 		ratings = append(ratings, s.Agg.FormRating(rating.Name, rating.Value))
 	}
 
 	contributeRating := s.Agg.CalculateContributeRating(ratings)
-	userOpinion, err := s.Agg.FormUserOpinion(r.Context(), contributeRating, userId)
+	userOpinion, userOpinionConfidence, err := s.Agg.FormUserOpinion(r.Context(), contributeRating, userId)
 	if err != nil {
 		ErrorOut(w, trash.WrapError("API POST BOOK ID REVIEWS", err))
 		return
 	}
-	userBias, err := s.Agg.FormUserBias(r.Context(), contributeRating, bookId)
+	userBias, userBiasConfidence, err := s.Agg.FormUserBias(r.Context(), contributeRating, bookId)
 	if err != nil {
 		ErrorOut(w, trash.WrapError("API POST BOOK ID REVIEWS", err))
 		return
 	}
 
-	err = s.Ah.PostReview(r.Context(), bookId, userId, contributeRating, userOpinion, userBias, ratings)
+	err = s.Ah.PostReview(r.Context(), bookId, userId, contributeRating, userOpinion, userOpinionConfidence, userBias, userBiasConfidence, ratings)
 	if err != nil {
 		ErrorOut(w, trash.WrapError("API POST BOOK ID REVIEWS", err))
 	}

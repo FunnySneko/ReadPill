@@ -15,6 +15,7 @@
 package aggregation
 
 import (
+	"context"
 	"encoding/json"
 	"os"
 
@@ -47,4 +48,37 @@ func (a *Aggregator) readReviewRules() error {
 	}
 	err = json.Unmarshal(data, &a.ReviewRules)
 	return trash.WrapError("AGG READ REVIEW RULES", err)
+}
+
+func (a *Aggregator) FormRating(name string, value float32) review.Rating {
+	ratingRule := review.RatingRule{}
+	for _, rule := range a.ReviewRules.RatingRules {
+		if name == rule.Name {
+			ratingRule = rule
+			break
+		}
+	}
+	return review.Rating{
+		Name:         name,
+		Value:        value,
+		ValueCeiling: ratingRule.ValueCeiling,
+		Contribute:   ratingRule.Contribute,
+	}
+}
+
+func (a *Aggregator) CollectBookReviews(ctx context.Context, bookId int) ([]review.Review, error) {
+	reviews, err := a.Db.GetBookReviews(ctx, bookId)
+	if err != nil {
+		return nil, trash.WrapError("AGG COLLECT BOOK REVIEWS", err)
+	}
+	r := []review.Review{}
+	for _, review := range reviews {
+		ratings, err := a.Db.GetReviewRatings(ctx, review.Id)
+		if err != nil {
+			return nil, trash.WrapError("AGG COLLECT BOOK REVIEWS", err)
+		}
+		review.Ratings = ratings
+		r = append(r, review)
+	}
+	return r, nil
 }

@@ -24,7 +24,7 @@ import (
 )
 
 func getReviewSelectQuery(column string, op string) string {
-	return fmt.Sprintf(`SELECT id, book_id, user_id, contribute_rating, user_opinion, user_bias FROM "review" WHERE %s %s $1`, column, op)
+	return fmt.Sprintf(`SELECT id, book_id, user_id, contribute_rating, user_opinion, user_opinion_confidence, user_bias, user_bias_confidence FROM "review" WHERE %s %s $1`, column, op)
 }
 
 func readReviews(rows pgx.Rows) ([]review.Review, error) {
@@ -32,7 +32,7 @@ func readReviews(rows pgx.Rows) ([]review.Review, error) {
 	reviews := []review.Review{}
 	for rows.Next() {
 		review := review.Review{}
-		err := rows.Scan(&review.Id, &review.BookId, &review.UserId, &review.ContributeRating, &review.UserOpinion, &review.UserBias)
+		err := rows.Scan(&review.Id, &review.BookId, &review.UserId, &review.ContributeRating, &review.UserOpinion, &review.UserOpinionConfidence, &review.UserBias, &review.UserBiasConfidence)
 		if err != nil {
 			return nil, trash.WrapError("DB READ REVIEWS", err)
 		}
@@ -41,9 +41,9 @@ func readReviews(rows pgx.Rows) ([]review.Review, error) {
 	return reviews, nil
 }
 
-func (d *Db) CreateReview(ctx context.Context, bookId int, userId int, contributeRating float32, userOpinion float32, userBias float32) (int, error) {
+func (d *Db) CreateReview(ctx context.Context, bookId int, userId int, contributeRating float32, userOpinion float32, userOpinionConfidence float32, userBias float32, userBiasConfidence float32) (int, error) {
 	reviewId := 0
-	err := d.conn.QueryRow(ctx, `INSERT INTO "review" (book_id, user_id, contribute_rating, user_opinion, user_bias) VALUES ($1, $2, $3, $4, $5) RETURNING id`, bookId, userId, contributeRating, userOpinion, userBias).Scan(&reviewId)
+	err := d.conn.QueryRow(ctx, `INSERT INTO "review" (book_id, user_id, contribute_rating, user_opinion, user_opinion_confidence, user_bias, user_bias_confidence) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`, bookId, userId, contributeRating, userOpinion, userOpinionConfidence, userBias, userBiasConfidence).Scan(&reviewId)
 	return reviewId, trash.WrapError("DB CREATE REVIEW", err)
 }
 

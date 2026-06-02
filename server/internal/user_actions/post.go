@@ -64,8 +64,8 @@ func (ah *ActionsHandler) PostRating(ctx context.Context, reviewId int, rating r
 	return trash.WrapError("ACT POST RATING", err)
 }
 
-func (ah *ActionsHandler) PostReview(ctx context.Context, bookId int, userId int, contributeRating float32, userOpinion float32, userBias float32, ratings []review.Rating) error {
-	reviewId, err := ah.db.CreateReview(ctx, bookId, userId, contributeRating, userOpinion, userBias)
+func (ah *ActionsHandler) PostReview(ctx context.Context, bookId int, userId int, contributeRating float32, userOpinion float32, userOpinionConfidence float32, userBias float32, userBiasConfidence float32, ratings []review.Rating) error {
+	reviewId, err := ah.db.CreateReview(ctx, bookId, userId, contributeRating, userOpinion, userOpinionConfidence, userBias, userBiasConfidence)
 	if err != nil {
 		return trash.WrapError("ACT POST REVIEW", err)
 	}

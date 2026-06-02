@@ -21,10 +21,12 @@ type Review struct {
 	// contribute rating is an average value of all ratings that have contribute rule set to true transformed to scale 0 to 1 and is not shown to user
 	ContributeRating float32
 	// user opinion is how strongly the rating deviates from user's average rating value (the way i see it, i guess ???) and is not shown to user
-	UserOpinion float32
+	UserOpinion           float32
+	UserOpinionConfidence float32
 	// user bias is how strongly the user rating deviates from given book's average rating (i don't think i use this term right ?) and is not shown to user
-	UserBias float32
-	Ratings  []Rating
+	UserBias           float32
+	UserBiasConfidence float32
+	Ratings            []Rating
 }
 
 type Rating struct {
